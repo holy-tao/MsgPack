@@ -21,10 +21,11 @@ class MsgPack {
             ;TODO fixed string
         }
         else if(MsgPackType.IsNegFixInt(lvByte)){
-            ;TODO negative fixed integer
+            ;Coerce to a signed value
+            return NumGet(buf, offset - 1, "char")
         }
         else if(MsgPackType.IsPosFixInt(lvByte)){
-            ;TODO positive fixed integer
+            return lvByte
         }
 
         ;Must be a value type
