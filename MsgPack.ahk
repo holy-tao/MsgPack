@@ -18,7 +18,10 @@ class MsgPack {
             ;TODO Fixed map
         }
         else if(MsgPackType.IsFixStr(lvByte)){
-            ;TODO fixed string
+            len := lvByte & 0x1F    ;mask out the top three bits
+            val := StrGet(buf.ptr + offset, len, strEncode)
+            offset += len
+            return val
         }
         else if(MsgPackType.IsNegFixInt(lvByte)){
             ;Coerce to a signed value
