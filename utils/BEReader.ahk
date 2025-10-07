@@ -9,7 +9,7 @@ class BEReader {
     static ReadInt8(buf, offset) => NumGet(buf, offset, "char")
     static ReadInt16(buf, offset) => BEReader.ReadBytesBigEndian(buf, offset, 2, true)    
     static ReadInt32(buf, offset) => BEReader.ReadBytesBigEndian(buf, offset, 4, true)
-    static ReadInt64(buf, offset) => BEReader.ReadBytesBigEndian(buf, offset, 6, true)
+    static ReadInt64(buf, offset) => BEReader.ReadBytesBigEndian(buf, offset, 8, true)
 
     static ReadUInt8(buf, offset) => NumGet(buf, offset, "uchar")
     static ReadUInt16(buf, offset) => BEReader.ReadBytesBigEndian(buf, offset, 2)
@@ -37,10 +37,14 @@ class BEReader {
         }
 
         if (isSigned) {
-            ; If the top bit is set, interpret as negative (two’s complement)
             signBit := 1 << ((numBytes * 8) - 1)
-            if (out & signBit)
-                out -= (1 << (numBytes * 8))
+            if (out & signBit) {
+                ; Avoid overflow: subtract using unsigned arithmetic
+                if (numBytes = 8)
+                    out := -(0x10000000000000000   - out)  ; 2^64 - out
+                else
+                    out -= (1 << (numBytes * 8))
+            }
         }
 
         return out
