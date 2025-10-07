@@ -1,12 +1,12 @@
-name: Unit-Tests
+name: Run Unit Tests
 
 on: 
-  pull_request:
+  push:
   workflow_dispatch:
 
 jobs:
   test:
-    name: Validation Tests
+    name: Run Unit Tests
     runs-on: windows-latest
     permissions:
       contents: read
