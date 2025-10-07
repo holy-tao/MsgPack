@@ -33,7 +33,7 @@ class DecodingTester{
      * @param {String} hex hex string to write 
      */
     static BufferFrom(hex) {
-        buf := Buffer(StrLen(hex) // 2)
+        buf := Buffer(StrSplit(hex, " ").Length)
         Loop Parse hex, " "
             NumPut("UChar", "0x" A_LoopField, buf, A_Index - 1)
         return buf
@@ -102,7 +102,7 @@ class PrimitiveDecodingTests {
     ;------------------------------------------------------------
     ; BIN TYPES
     ;------------------------------------------------------------
-    Binary8(*) => DecodingTester.Test("C4 03 41 42 43", DecodingTester.BufferFrom("414243"))
-    Binary16(*) => DecodingTester.Test("C5 00 03 41 42 43", DecodingTester.BufferFrom("414243"))
-    Binary32(*) => DecodingTester.Test("C6 00 00 00 03 41 42 43", DecodingTester.BufferFrom("414243"))
+    Binary8(*) => DecodingTester.Test("C4 03 41 42 43", DecodingTester.BufferFrom("41 42 43"))
+    Binary16(*) => DecodingTester.Test("C5 00 03 41 42 43", DecodingTester.BufferFrom("41 42 43"))
+    Binary32(*) => DecodingTester.Test("C6 00 00 00 03 41 42 43", DecodingTester.BufferFrom("41 42 43"))
 }
