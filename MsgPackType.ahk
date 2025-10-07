@@ -67,33 +67,23 @@ class MsgPackType {
 
     static map32 => 0xdf
 
-    /**
-     * Is `byte` a positive fixint?
-     * @param {Integer} byte the byte to check
-     * @returns {Boolean} 1 if `byte` is a positive fixint, 0 otherwise
-     */
-    static IsPosFixInt(byte){
-        return 0 <= byte && byte <= 255
+    static IsPosFixInt(byte) {
+        return 0x00 <= byte && byte <= 0x7F
     }
 
-    /**
-     * Is `byte` a negative fixint?
-     * @param {Integer} byte the byte to check
-     * @returns {Boolean} 1 if `byte` is a positive fixint, 0 otherwise
-     */
-    static IsNegFixInt(byte){
-        return 0xe0 <= byte && byte <= 0xff
+    static IsNegFixInt(byte) {
+        return 0xE0 <= byte && byte <= 0xFF
     }
 
-    static IsFixStr(byte){
-        return 0xa0 <= byte && byte <= 0xbf
+    static IsFixStr(byte) {
+        return 0xA0 <= byte && byte <= 0xBF
     }
 
-    static IsFixMap(byte){
-        return 0x80 <= byte && byte <= 0x8f
+    static IsFixMap(byte) {
+        return 0x80 <= byte && byte <= 0x8F
     }
-    
-    static IsFixArr(byte){
-        return 0x90 <= byte && byte <= 0x9f
+
+    static IsFixArr(byte) {
+        return 0x90 <= byte && byte <= 0x9F
     }
 }
