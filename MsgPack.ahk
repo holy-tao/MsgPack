@@ -18,26 +18,29 @@ class MsgPack {
      */
     static Decode(source, strEncoding := "UTF-8"){
         if(source is Buffer){
-            return MsgPack.DecodeInner(BufferReader(source), strEncoding)
+            return MsgPack.DecodeValue(BufferReader(source), strEncoding)
         }
         else if(source is String){
             reader := FileReader(FileOpen(source, "r-d"))
-            return MsgPack.DecodeInner(reader, strEncoding)
+            return MsgPack.DecodeValue(reader, strEncoding)
         }
         else if(source is File){
-            return MsgPack.DecodeInner(FileREader(source), strEncoding)
+            return MsgPack.DecodeValue(FileREader(source), strEncoding)
         }
 
         throw TypeError(Format("Expected a Buffer, File, or filepath, but got a(n) {1}", Type(source)), , source)
     }
 
     /**
-     * Inner decode method
+     * Decodes a single value at the current "level" of the message pack. This might
+     * not be a value type, for example, if it's an array, this method will also decode
+     * its contents.
+     * 
      * @param {BinaryReader} reader reader to read values from
      * @param {String} encoding encoding to use when decoding strings
-     * @returns {Number | String | Map | Array} the decode value
+     * @returns {Number | String | Map | Array} the decoded value
      */
-    static DecodeInner(reader, encoding){
+    static DecodeValue(reader, encoding){
         lvByte := reader.ReadByte()
 
         ; Fix type?
@@ -132,22 +135,36 @@ class MsgPack {
         return val
     }
 
+    /**
+     * Decodes an array and all of its items
+     * @param {BinaryReader} reader reader to read values from
+     * @param {Integer} length the length of the array 
+     * @param {String} encoding encoding for any strings
+     * @returns {Array} the decoded array 
+     */
     static DecodeArray(reader, length, encoding){
         arr := Array(), arr.Length := length
 
         Loop(length){
-            arr[A_Index] := MsgPack.DecodeInner(reader, encoding)
+            arr[A_Index] := MsgPack.DecodeValue(reader, encoding)
         }
 
         return arr
     }
 
-    static DecodeMap(reader, length, encoding){
+    /**
+     * Decodes a map and all of its keys and values
+     * @param {BinaryReader} reader reader to read values from
+     * @param {Integer} count the number of key/value pairs in the map
+     * @param {String} encoding encoding for any strings
+     * @returns {Map} the decoded map
+     */
+    static DecodeMap(reader, count, encoding){
         outMap := Map()
 
-        Loop(length){
-            key := MsgPack.DecodeInner(reader, encoding)
-            val := MsgPack.DecodeInner(reader, encoding)
+        Loop(count){
+            key := MsgPack.DecodeValue(reader, encoding)
+            val := MsgPack.DecodeValue(reader, encoding)
 
             outMap[key] := val
         }
