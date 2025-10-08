@@ -3,31 +3,51 @@
 #Include MsgPackType.ahk
 #Include Utils\BEReader.ahk
 #Include utils\BufferReader.ahk
+#Include utils\FileReader.ahk
 
 #DllLoad ntdll.dll  ;For RtlCopyMemory
 
 class MsgPack {
 
+    /**
+     * Decodes the value in a file or buffer
+     * @param {Buffer | File | String} source the source to decode. This can either be a
+     *          Buffer, a file, or a filepath, which will be opened.
+     * @param {String} strEncoding string encoding with which to decode string values 
+     * @returns {Number | String | Map | Array} the decode value
+     */
     static Decode(source, strEncoding := "UTF-8"){
         if(source is Buffer){
             return MsgPack.DecodeInner(BufferReader(source), strEncoding)
         }
+        else if(source is String){
+            reader := FileReader(FileOpen(source, "r-d"))
+            return MsgPack.DecodeInner(reader, strEncoding)
+        }
+        else if(source is File){
+            return MsgPack.DecodeInner(FileREader(source), strEncoding)
+        }
+
+        throw TypeError(Format("Expected a Buffer, File, or filepath, but got a(n) {1}", Type(source)), , source)
     }
 
-    ;Endianness:
     /**
-     * 
-     * @param {BinaryReader} reader 
-     * @param {String} encoding encoding to use when decoding strings 
+     * Inner decode method
+     * @param {BinaryReader} reader reader to read values from
+     * @param {String} encoding encoding to use when decoding strings
+     * @returns {Number | String | Map | Array} the decode value
      */
     static DecodeInner(reader, encoding){
         lvByte := reader.ReadByte()
 
+        ; Fix type?
         if(MsgPackType.IsFixArr(lvByte)){
-            ;TODO Fixed array
+            len := lvByte & 0x1F    ;mask out the top three bits
+            return MsgPack.DecodeArray(reader, len, encoding)
         }
         else if(MsgPackType.IsFixMap(lvByte)){
-            ;TODO Fixed map
+            len := lvByte & 0xF0    ;mask out the top four bits
+            return MsgPack.DecodeMap(reader, len, encoding)
         }
         else if(MsgPackType.IsFixStr(lvByte)){
             len := lvByte & 0x1F    ;mask out the top three bits
@@ -41,8 +61,20 @@ class MsgPack {
             return lvByte
         }
 
-        ;Must be a value type
+        ;Must be a type with a leading byte
         switch(lvByte){
+            case MsgPackType.array16:
+                len := BEReader.ReadUInt16(reader)
+                val := MsgPack.DecodeArray(reader, len, encoding)
+            case MsgPackType.array32:
+                len := BEReader.ReadInt32(reader)
+                val := MsgPack.DecodeArray(reader, len, encoding)
+            case MsgPackType.map16:
+                len := BEReader.ReadUInt16(reader)
+                val := MsgPack.DecodeMap(reader, len, encoding)
+            case MsgPackType.map32:
+                len := BEReader.ReadUInt32(reader)
+                val := MsgPack.DecodeMap(reader, len, encoding)
             case MsgPackType.nil:
                 val := ""
             case MsgPackType.bFalse:
@@ -98,5 +130,28 @@ class MsgPack {
         }
 
         return val
+    }
+
+    static DecodeArray(reader, length, encoding){
+        arr := Array(), arr.Length := length
+
+        Loop(length){
+            arr[A_Index] := MsgPack.DecodeInner(reader, encoding)
+        }
+
+        return arr
+    }
+
+    static DecodeMap(reader, length, encoding){
+        outMap := Map()
+
+        Loop(length){
+            key := MsgPack.DecodeInner(reader, encoding)
+            val := MsgPack.DecodeInner(reader, encoding)
+
+            outMap[key] := val
+        }
+
+        return outMap
     }
 }
