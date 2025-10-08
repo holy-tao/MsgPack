@@ -33,7 +33,12 @@ class FileReader extends BinaryReader {
     }
 
     ReadString(length, encoding){
+        if(length == 0){
+            return ""
+        }
+
         ;Need to read in bytes, not characters
-        return StrGet(this.ReadBytes(length),, encoding)
+        str := StrGet(this.ReadBytes(length),, encoding)
+        return str
     }
 }

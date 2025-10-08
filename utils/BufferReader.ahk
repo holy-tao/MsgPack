@@ -34,6 +34,10 @@ class BufferReader extends BinaryReader {
     }
 
     ReadString(length, encoding){
+        if(length == 0){
+            return ""
+        }
+
         ;Read bytes, not characters
         strBuf := this.ReadBytes(length)
         str := StrGet(strBuf,, encoding)
