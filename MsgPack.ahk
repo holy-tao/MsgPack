@@ -42,11 +42,11 @@ class MsgPack {
 
         ; Fix type?
         if(MsgPackType.IsFixArr(lvByte)){
-            len := lvByte & 0x1F    ;mask out the top three bits
+            len := lvByte - 0x90    ;mask out the top three bits
             return MsgPack.DecodeArray(reader, len, encoding)
         }
         else if(MsgPackType.IsFixMap(lvByte)){
-            len := lvByte & 0xF0    ;mask out the top four bits
+            len := lvByte - 0x80    ;mask out the top four bits
             return MsgPack.DecodeMap(reader, len, encoding)
         }
         else if(MsgPackType.IsFixStr(lvByte)){
