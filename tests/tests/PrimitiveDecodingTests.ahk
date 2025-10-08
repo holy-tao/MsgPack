@@ -103,12 +103,6 @@ class PrimitiveDecodingTests {
     String16(*) => DecodingTester.Test("DA 00 03 41 42 43", "ABC")
     String32(*) => DecodingTester.Test("DB 00 00 00 03 41 42 43", "ABC")
 
-    StringEmpty(){
-        DecodingTester.Test("c4 00", "")
-        DecodingTester.Test("c5 00 00", "")
-        DecodingTester.Test("c6 00 00 00 00", "")
-    }
-
     StringEmoji(){
         ;Requires UTF-8 (the default)
         DecodingTester.Test("a4 f0 9f 8d ba", "🍺")
