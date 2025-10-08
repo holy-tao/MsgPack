@@ -20,7 +20,7 @@ class DecodingTester{
 
         result := MsgPack.Decode(buf)
         if (expected is Primitive && result != expected){
-            msg := Format("Assertion failed: Expected {1} -> {2}, expected {3}", hex, String(result), String(expected))
+            msg := Format("Decode {1} as {2}, expected {3}", hex, String(result), String(expected))
             throw Error(msg)
         }
         else if(expected is Buffer){
