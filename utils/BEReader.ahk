@@ -1,4 +1,5 @@
 #Requires AutoHotkey v2.0
+#Include BinaryReader.ahk
 
 /**
  * A big-endian binary reader. AutoHotkey doesn's support specifying endianness, so here
@@ -6,32 +7,31 @@
  */
 class BEReader {
 
-    static ReadInt8(buf, offset) => NumGet(buf, offset, "char")
-    static ReadInt16(buf, offset) => BEReader.ReadBytesBigEndian(buf, offset, 2, true)    
-    static ReadInt32(buf, offset) => BEReader.ReadBytesBigEndian(buf, offset, 4, true)
-    static ReadInt64(buf, offset) => BEReader.ReadBytesBigEndian(buf, offset, 8, true)
+    static ReadInt8(reader) => reader.ReadByte(true)
+    static ReadInt16(reader) => BEReader.ReadBytesBigEndian(reader, 2, true)    
+    static ReadInt32(reader) => BEReader.ReadBytesBigEndian(reader, 4, true)
+    static ReadInt64(reader) => BEReader.ReadBytesBigEndian(reader, 8, true)
 
-    static ReadUInt8(buf, offset) => NumGet(buf, offset, "uchar")
-    static ReadUInt16(buf, offset) => BEReader.ReadBytesBigEndian(buf, offset, 2)
-    static ReadUInt32(buf, offset) => BEReader.ReadBytesBigEndian(buf, offset, 4)
-    static ReadUInt64(buf, offset) => BEReader.ReadBytesBigEndian(buf, offset, 8)
+    static ReadUInt8(reader) => reader.ReadByte()
+    static ReadUInt16(reader) => BEReader.ReadBytesBigEndian(reader, 2)
+    static ReadUInt32(reader) => BEReader.ReadBytesBigEndian(reader, 4)
+    static ReadUInt64(reader) => BEReader.ReadBytesBigEndian(reader, 8)
 
-    static ReadFloat32(buf, offset) => BEReader.ReadFloatBigEndian(buf, offset)
-    static ReadFloat64(buf, offset) => BEReader.ReadFloatBigEndian(buf, offset, true)
+    static ReadFloat32(reader) => BEReader.ReadFloatBigEndian(reader, false)
+    static ReadFloat64(reader) => BEReader.ReadFloatBigEndian(reader, true)
 
     /**
      * Read a big-endian Integer from a buffer or buffer-like object
      * 
-     * @param {Buffer | Buffer-like Object} buf buffer to read data from
-     * @param {Integer} offset offset in `buf` to read at
+     * @param {BinaryReader} reader reader to read data from
      * @param {Integer} numBytes the number of bytes to read
      * @param {Boolean} isSigned whether or not the value is signed 
      */
-    static ReadBytesBigEndian(buf, offset, numBytes, isSigned := false) {
+    static ReadBytesBigEndian(reader, numBytes, isSigned := false) {
         out := 0
 
         loop numBytes {
-            byte := NumGet(buf, offset + (A_Index - 1), "UChar")
+            byte := reader.ReadByte()
             shift := (numBytes - A_Index) * 8
             out |= byte << shift
         }
@@ -52,17 +52,18 @@ class BEReader {
 
     /**
      * Read a big-endian Float or Double from a buffer
-     * @param {Buffer | Buffer-like Object} buf buffer to read data from
-     * @param {Integer} offset offset in `buf` to read at
+     * @param {BinaryReader} reader reader to read data from
      * @param {Boolean} isDouble whether or not to read a Double (8-byte / 64-bit) value 
      */
-    static ReadFloatBigEndian(buf, offset, isDouble := false) {
+    static ReadFloatBigEndian(reader, isDouble := false) {
+        static temp := Buffer(8)
+
         size := isDouble ? 8 : 4
-        temp := Buffer(size)
+        temp.size := size
         
         ; Copy and reverse byte order
         loop(size){
-            NumPut("UChar", NumGet(buf, offset + (size - A_Index), "UChar"), temp, A_Index - 1)
+            NumPut("UChar", reader.ReadByte(), temp, size - A_Index)
         }
         
         return NumGet(temp, 0, isDouble ? "Double" : "Float")

@@ -2,14 +2,26 @@
 
 #Include MsgPackType.ahk
 #Include Utils\BEReader.ahk
+#Include utils\BufferReader.ahk
 
 #DllLoad ntdll.dll  ;For RtlCopyMemory
 
 class MsgPack {
 
-    ;Endianness: 
-    static Decode(buf, &offset := 0, strEncode := "UTF-8"){
-        lvByte := NumGet(buf, offset++, "uchar")
+    static Decode(source, strEncoding := "UTF-8"){
+        if(source is Buffer){
+            return MsgPack.DecodeInner(BufferReader(source), strEncoding)
+        }
+    }
+
+    ;Endianness:
+    /**
+     * 
+     * @param {BinaryReader} reader 
+     * @param {String} encoding encoding to use when decoding strings 
+     */
+    static DecodeInner(reader, encoding){
+        lvByte := reader.ReadByte()
 
         if(MsgPackType.IsFixArr(lvByte)){
             ;TODO Fixed array
@@ -19,13 +31,11 @@ class MsgPack {
         }
         else if(MsgPackType.IsFixStr(lvByte)){
             len := lvByte & 0x1F    ;mask out the top three bits
-            val := StrGet(buf.ptr + offset, len, strEncode)
-            offset += len
-            return val
+            return reader.ReadString(len, encoding)
         }
         else if(MsgPackType.IsNegFixInt(lvByte)){
-            ;Coerce to a signed value
-            return NumGet(buf, offset - 1, "char")
+            reader.offset--
+            return reader.ReadByte(true)
         }
         else if(MsgPackType.IsPosFixInt(lvByte)){
             return lvByte
@@ -40,66 +50,43 @@ class MsgPack {
             case MsgPackType.bTrue:
                 val := 1
             case MsgPackType.bin8:
-                len := NumGet(buf, offset++, "uchar")
-                val := Buffer(len)
-                DllCall("ntdll\RtlCopyMemory", "ptr", val, "ptr", buf.ptr + offset, "uint", len)
-                offset += len
+                len := reader.ReadByte()
+                val := reader.ReadBytes(len)
             case MsgPackType.bin16:
-                len := BEReader.ReadUInt16(buf, offset)
-                offset += 2
-                val := Buffer(len)
-                DllCall("ntdll\RtlCopyMemory", "ptr", val, "ptr", buf.ptr + offset, "uint", len)
-                offset += len
+                len := BEReader.ReadUInt16(reader)
+                val := reader.ReadBytes(len)
             case MsgPackType.bin32:
-                len := BEReader.ReadUInt32(buf, offset)
-                offset += 4
-                val := Buffer(len)
-                DllCall("ntdll\RtlCopyMemory", "ptr", val, "ptr", buf.ptr + offset, "uint", len)
-                offset += len
+                len := BEReader.ReadUInt32(reader)
+                val := reader.ReadBytes(len)
             case MsgPackType.int8:
-                val := NumGet(buf, offset, "char")
-                offset++
+                val := reader.ReadByte(true)
             case MsgPackType.int16:
-                val := BEReader.ReadInt16(buf, offset)
-                offset += 2
+                val := BEReader.ReadInt16(reader)
             case MsgPackType.int32:
-                val := BEReader.ReadInt32(buf, offset)
-                offset += 4
+                val := BEReader.ReadInt32(reader)
             case MsgPackType.int64:
-                val := BEReader.ReadInt64(buf, offset)
-                offset += 8
+                val := BEReader.ReadInt64(reader)
             case MsgPackType.uint8:
-                val := NumGet(buf, offset, "uchar")
-                offset++
+                val := reader.ReadByte()
             case MsgPackType.uint16:
-                val := BEReader.ReadUInt16(buf, offset)
-                offset += 2
+                val := BEReader.ReadUInt16(reader)
             case MsgPackType.uint32:
-                val := BEReader.ReadUInt32(buf, offset)
-                offset += 4
+                val := BEReader.ReadUInt32(reader)
             case MsgPackType.uint64:
-                val := BEReader.ReadUInt64(buf, offset)
-                offset += 8
+                val := BEReader.ReadUInt64(reader)
             case MsgPackType.float32:
-                val := BEReader.ReadFloat32(buf, offset)
-                offset += 4
+                val := BEReader.ReadFloat32(reader)
             case MsgPackType.float64:
-                val := BEReader.ReadFloat64(buf, offset)
-                offset += 8
+                val := BEReader.ReadFloat64(reader)
             case MsgPackType.str8:
-                len := NumGet(buf, offset++, "uchar")
-                val := StrGet(buf.ptr + offset, len, strEncode)
-                offset += len
+                len := reader.ReadByte()
+                val := reader.ReadString(len, encoding)
             case MsgPackType.str16:
-                len := BEReader.ReadUInt16(buf, offset)
-                offset += 2
-                val := StrGet(buf.ptr + offset, len, strEncode)
-                offset += len
+                len := BEReader.ReadUInt16(reader)
+                val := reader.ReadString(len, encoding)
             case MsgPackType.str32:
-                len := BEReader.ReadUInt32(buf, offset)
-                offset += 4
-                val := StrGet(buf.ptr + offset, len, strEncode)
-                offset += len
+                len := BEReader.ReadUInt32(reader)
+                val := reader.ReadString(len, encoding)
             case MsgPackType.ext8:
                 ;TODO
             case MsgPackType.ext16:
@@ -107,7 +94,7 @@ class MsgPack {
             case MsgPackType.ext32:
                 ;TODO
             default:
-                throw TypeError(Format("Could not decode leading byte 0x{1:0X} at offset {2}", lvByte, offset - 1))
+                throw TypeError(Format("Could not decode leading byte 0x{1:0X} at offset {2}", lvByte, reader.offset - 1))
         }
 
         return val
