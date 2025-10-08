@@ -17,6 +17,7 @@ class BufferReader extends BinaryReader {
             throw TypeError(Format("Expected a Buffer but got a(n) {1}", type(buf)), , buf)
         }
 
+        this.offset := 0
         this._buf := buf
     }
 

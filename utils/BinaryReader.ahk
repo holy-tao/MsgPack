@@ -6,8 +6,6 @@
  */
 class BinaryReader{
 
-    offset := 0
-
     /**
      * Reads a single byte
      * 
