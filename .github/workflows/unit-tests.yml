@@ -23,7 +23,6 @@ jobs:
         uses: holy-tao/install-autohotkey@v1
         with:
           version: v2.0.19
-          destination: "$cwd\autohotkey"
 
       - name: Run Unit Tests
         working-directory: tests
