@@ -1,6 +1,8 @@
 #Requires AutoHotkey v2.0
 #Include BinaryReader.ahk
 
+#DllLoad ntdll.dll
+
 /**
  * A reader that "streams" data in from a Buffer already in memory
  */

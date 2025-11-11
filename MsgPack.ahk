@@ -5,8 +5,6 @@
 #Include utils\BufferReader.ahk
 #Include utils\FileReader.ahk
 
-#DllLoad ntdll.dll  ;For RtlCopyMemory
-
 class MsgPack {
 
     /**
@@ -53,7 +51,7 @@ class MsgPack {
             return MsgPack.DecodeMap(reader, len, encoding)
         }
         else if(MsgPackType.IsFixStr(lvByte)){
-            len := lvByte & 0x1F    ;mask out the top three bits
+            len := lvByte - 0xa0    ;mask out the top three bits
             return reader.ReadString(len, encoding)
         }
         else if(MsgPackType.IsNegFixInt(lvByte)){
