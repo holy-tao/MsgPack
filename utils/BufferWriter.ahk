@@ -33,6 +33,10 @@ class BufferWriter extends BinaryWriter {
     }
 
     WriteBytes(byteBuffer){
+        while(this.buf.Size < byteBuffer.Size + this.offset){
+            this.buf.Size *= 2
+        }
+
         DllCall("ntdll\RtlCopyMemory", "ptr", this.buf.ptr + this.offset, "ptr", byteBuffer, "uint", byteBuffer.Size)
         this.offset += byteBuffer.Size
     }
