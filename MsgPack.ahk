@@ -317,7 +317,7 @@ class MsgPack {
             return
         }
 
-        StrPut(str, strBuf, len, "UTF-8")
+        StrPut(str, strBuf, byteLen, "UTF-8")
 
         if(strBuf.Size <= 31){
             writer.WriteByte(0xA0 | strBuf.Size)
