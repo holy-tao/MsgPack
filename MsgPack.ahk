@@ -28,19 +28,18 @@ class MsgPack {
      * Decodes the value in a file or buffer
      * @param {Buffer | File | String} source the source to decode. This can either be a
      *          Buffer, a file, or a filepath, which will be opened.
-     * @param {String} strEncoding string encoding with which to decode string values 
      * @returns {Number | String | Map | Array} the decode value
      */
-    static Decode(source, strEncoding := "UTF-8"){
+    static Decode(source){
         if(source is Buffer){
-            return MsgPack.DecodeValue(BufferReader(source), strEncoding)
+            return MsgPack.DecodeValue(BufferReader(source))
         }
         else if(source is String){
             reader := FileReader(FileOpen(source, "r-d"))
-            return MsgPack.DecodeValue(reader, strEncoding)
+            return MsgPack.DecodeValue(reader)
         }
         else if(source is File){
-            return MsgPack.DecodeValue(FileREader(source), strEncoding)
+            return MsgPack.DecodeValue(FileREader(source))
         }
 
         throw TypeError(Format("Expected a Buffer, File, or filepath, but got a(n) {1}", Type(source)), , source)
@@ -52,24 +51,23 @@ class MsgPack {
      * its contents.
      * 
      * @param {BinaryReader} reader reader to read values from
-     * @param {String} encoding encoding to use when decoding strings
      * @returns {Number | String | Map | Array} the decoded value
      */
-    static DecodeValue(reader, encoding){
+    static DecodeValue(reader){
         lvByte := reader.ReadByte()
 
         ; Fix type?
         if(MsgPackType.IsFixArr(lvByte)){
             len := lvByte - 0x90    ;mask out the top three bits
-            return MsgPack.DecodeArray(reader, len, encoding)
+            return MsgPack.DecodeArray(reader, len)
         }
         else if(MsgPackType.IsFixMap(lvByte)){
             len := lvByte - 0x80    ;mask out the top four bits
-            return MsgPack.DecodeMap(reader, len, encoding)
+            return MsgPack.DecodeMap(reader, len)
         }
         else if(MsgPackType.IsFixStr(lvByte)){
             len := lvByte - 0xa0    ;mask out the top three bits
-            return reader.ReadString(len, encoding)
+            return reader.ReadString(len, "UTF-8")
         }
         else if(MsgPackType.IsNegFixInt(lvByte)){
             reader.offset--
@@ -83,16 +81,16 @@ class MsgPack {
         switch(lvByte){
             case MsgPackType.array16:
                 len := BEReader.ReadUInt16(reader)
-                val := MsgPack.DecodeArray(reader, len, encoding)
+                val := MsgPack.DecodeArray(reader, len)
             case MsgPackType.array32:
                 len := BEReader.ReadInt32(reader)
-                val := MsgPack.DecodeArray(reader, len, encoding)
+                val := MsgPack.DecodeArray(reader, len)
             case MsgPackType.map16:
                 len := BEReader.ReadUInt16(reader)
-                val := MsgPack.DecodeMap(reader, len, encoding)
+                val := MsgPack.DecodeMap(reader, len)
             case MsgPackType.map32:
                 len := BEReader.ReadUInt32(reader)
-                val := MsgPack.DecodeMap(reader, len, encoding)
+                val := MsgPack.DecodeMap(reader, len)
             case MsgPackType.nil:
                 val := ""
             case MsgPackType.bFalse:
@@ -130,13 +128,13 @@ class MsgPack {
                 val := BEReader.ReadFloat64(reader)
             case MsgPackType.str8:
                 len := reader.ReadByte()
-                val := reader.ReadString(len, encoding)
+                val := reader.ReadString(len, "UTF-8")
             case MsgPackType.str16:
                 len := BEReader.ReadUInt16(reader)
-                val := reader.ReadString(len, encoding)
+                val := reader.ReadString(len, "UTF-8")
             case MsgPackType.str32:
                 len := BEReader.ReadUInt32(reader)
-                val := reader.ReadString(len, encoding)
+                val := reader.ReadString(len, "UTF-8")
             case MsgPackType.ext8:
                 ;TODO
             case MsgPackType.ext16:
@@ -157,11 +155,11 @@ class MsgPack {
      * @param {String} encoding encoding for any strings
      * @returns {Array} the decoded array 
      */
-    static DecodeArray(reader, length, encoding){
+    static DecodeArray(reader, length){
         arr := Array(), arr.Length := length
 
         Loop(length){
-            arr[A_Index] := MsgPack.DecodeValue(reader, encoding)
+            arr[A_Index] := MsgPack.DecodeValue(reader)
         }
 
         return arr
@@ -174,12 +172,12 @@ class MsgPack {
      * @param {String} encoding encoding for any strings
      * @returns {Map} the decoded map
      */
-    static DecodeMap(reader, count, encoding){
+    static DecodeMap(reader, count){
         outMap := Map()
 
         Loop(count){
-            key := MsgPack.DecodeValue(reader, encoding)
-            val := MsgPack.DecodeValue(reader, encoding)
+            key := MsgPack.DecodeValue(reader)
+            val := MsgPack.DecodeValue(reader)
 
             outMap[key] := val
         }
