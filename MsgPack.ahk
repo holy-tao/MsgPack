@@ -5,7 +5,24 @@
 #Include utils\BufferReader.ahk
 #Include utils\FileReader.ahk
 
+#Include utils\BEWriter.ahk
+#Include utils\BufferWriter.ahk
+#Include utils\FileWriter.ahk
+
 class MsgPack {
+
+;@region Options
+
+    /**
+     * If true, allows the encoder to use a lossy heuristic to determine whether or not
+     * float values can be encoded as Singles. This may result in losing some precision.
+     * Default is false
+     * @type {Boolean}
+     */
+    static CompactFloats := false
+;@endregion Options
+
+;@region Decoding
 
     /**
      * Decodes the value in a file or buffer
@@ -169,4 +186,205 @@ class MsgPack {
 
         return outMap
     }
+
+;@endregion Decoding
+
+;@region Encoding
+    static EncodeToFile(dest, val?) => MsgPack.EncodeValue(val?, FileWriter(dest))
+
+    static EncodeToBuffer(val?){
+        buf := Buffer(64, 0)
+        writer := BufferWriter(buf)
+        MsgPack.EncodeValue(writer, val?)
+        buf.Size := writer.offset
+
+        return buf
+    }
+
+    static EncodeValue(writer, val?){
+        if(!IsSet(val)){
+            MsgPack.EncodeNil(writer)
+        }
+        else if (val is String){
+            MsgPack.EncodeString(val, writer)
+        }
+        else if (val is Buffer){
+            MsgPack.EncodeBinary(val, writer)
+        }
+        else if (IsFloat(val)){
+            MsgPack.EncodeFloat(val, writer)
+        }
+        else if (IsInteger(val)){
+            MsgPack.EncodeInteger(val, writer)
+        }
+        else if (val is Map){
+            ; TODO encode maps
+        }
+        else if (val is Array){
+            ; TODO encode arrays
+        }
+        else{
+            ; TODO extensions
+            throw TypeError("Cannot encode value of type " . Type(val), , val)
+        }
+    }
+
+    /**
+     * Writes nil to the output
+     * @param {BinaryWriter} writer Writer to write data to 
+     */
+    static EncodeNil(writer){
+        writer.WriteByte(MsgPackType.nil)
+    }
+
+    /**
+     * Encodes a string
+     * @param {String} str The string to encode 
+     * @param {BinaryWriter} writer Writer to write data to
+     */
+    static EncodeString(str, writer){
+        byteLen := StrPut(str, "UTF-8") - 1   ; Subtract null terminator
+        strBuf := Buffer(byteLen)
+
+        if((len := StrLen(str)) == 0){
+            ; StrPut complains if you tell it to put 0 characters into a Buffer
+            writer.WriteByte(0xA0)
+            return
+        }
+
+        StrPut(str, strBuf, len, "UTF-8")
+
+        if(strBuf.Size <= 31){
+            writer.WriteByte(0xA0 | strBuf.Size)
+            writer.WriteBytes(strBuf)
+        }
+        else if(strBuf.Size <= 255){
+            writer.WriteByte(MsgPackType.str8)
+            BEWriter.WriteUInt8(writer, strBuf.Size)
+            writer.WriteBytes(strBuf)
+        }
+        else if(strBuf.Size <= 65535){
+            writer.WriteByte(MsgPackType.str16)
+            BEWriter.WriteUInt16(writer, strBuf.Size)
+            writer.WriteBytes(strBuf)
+        }
+        else if(strBuf.Size <= 4294967295){
+            writer.WriteByte(MsgPackType.str32)
+            BEWriter.WriteUInt32(writer, strBuf.Size)
+            writer.WriteBytes(strBuf)
+        }
+        else{
+            throw ValueError("String too long`nhttps://github.com/msgpack/msgpack/blob/master/spec.md#str-format-family", , strBuf.Size)
+        }
+    }
+
+    /**
+     * Encodes raw binary data
+     * @param {Buffer} buf Binary data to encode 
+     * @param {BinaryWriter} writer Writer to write data to
+     */
+    static EncodeBinary(buf, writer){
+        if(buf.Size <= 255){
+            writer.WriteByte(MsgPackType.bin8)
+            BEWriter.WriteUInt8(writer, buf.Size)
+            writer.WriteBytes(buf)
+        }
+        else if(buf.Size <= 65535){
+            writer.WriteByte(MsgPackType.bin16)
+            BEWriter.WriteUInt16(writer, buf.Size)
+            writer.WriteBytes(buf)
+        }
+        else if(buf.Size <= 4294967295){
+            writer.WriteByte(MsgPackType.bin32)
+            BEWriter.WriteUInt32(writer, buf.Size)
+            writer.WriteBytes(buf)
+        }
+        else{
+            throw ValueError("Buffer too large`nhttps://github.com/msgpack/msgpack/blob/master/spec.md#bin-format-family", , buf.Size)
+        }
+    }
+
+    /**
+     * Encodes a floating-point number. If CompactFloats is on, will try to guess whether it
+     * can be encoded as a Single, otherwise, Floats are always encoded as Doubles
+     * @param {Float} val Float value to encode
+     * @param {BinaryWriter} writer Writer to write data to
+     */
+    static EncodeFloat(val, writer){
+        ; Simple heruistic to guess whether a value can be encoded as a single
+        LooksSingle(val) => (Abs(val) <= 3.402823466e38)
+        
+        if(MsgPack.CompactFloats && LooksSingle(val)){
+            writer.WriteByte(MsgPackType.float32)
+            BEWriter.WriteFloat(writer, val)
+        }
+        else{
+            writer.WriteByte(MsgPackType.float64)
+            BEWriter.WriteDouble(writer, val)
+        }
+    }
+
+    /**
+     * Encodes a boolean value. This method is provided for convenience, but 
+     * currently isn't actually used
+     * @param {Integer} val Boolean value to encode
+     * @param {BinaryWriter} writer Writer to write data to
+     */
+    static EncodeBoolean(val, writer){
+        writer.WriteByte(val ? MsgPackType.bTrue : MsgPackType.bFalse)
+    }
+
+    /**
+     * Encodes an integer value and writes it to a destination
+     * @param {Integer} val Integer to encode
+     * @param {BinaryWriter} writer Writer to write data to
+     */
+    static EncodeInteger(val, writer) {
+        if (val >= 0) {
+            if (val <= 127) {
+                writer.WriteByte(val)  ; positive fixint
+            }
+            else if (val <= 0xFF) {
+                writer.WriteByte(MsgPackType.uint8)
+                writer.WriteByte(val)
+            }
+            else if (val <= 0xFFFF) {
+                writer.WriteByte(MsgPackType.uint16)
+                BEWriter.WriteUInt16(writer, val)
+            }
+            else if (val <= 0xFFFFFFFF) {
+                writer.WriteByte(MsgPackType.uint32)
+                BEWriter.WriteUInt32(writer, val)
+            }
+            else {
+                writer.WriteByte(MsgPackType.uint64)
+                BEWriter.WriteUInt64(writer, val)
+            }
+        }
+        else {
+            if (val >= -32) {
+                writer.WriteByte(0xE0 | (val + 32)) ; negative fixint
+            }
+            else if (val >= -128) {
+                writer.WriteByte(MsgPackType.int8)
+                BEWriter.WriteInt8(writer, val)
+            }
+            else if (val >= -32768) {
+                writer.WriteByte(MsgPackType.int16)
+                BEWriter.WriteInt16(writer, val)
+            }
+            else if (val >= -2147483648) {
+                writer.WriteByte(MsgPackType.int32)
+                BEWriter.WriteInt32(writer, val)
+            }
+            else {
+                writer.WriteByte(MsgPackType.int64)
+                BEWriter.WriteInt64(writer, val)
+            }
+        }
+    }
+
+
+;@endregion Encoding
+
 }
