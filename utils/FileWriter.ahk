@@ -11,7 +11,12 @@ class FileWriter extends BinaryWriter {
 
     offset{
         get => this.dest.Pos
-        set => this.dest.Seek(value)
+        set {
+            ; Check is necessary because this can be called in __Init
+            if(this.HasProp("dest")){
+                this.dest.Seek(value)
+            }
+        }
     }
 
     __New(dest){

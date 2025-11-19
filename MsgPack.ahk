@@ -199,7 +199,7 @@ class MsgPack {
 ;@endregion Decoding
 
 ;@region Encoding
-    static EncodeToFile(dest, val?) => MsgPack.EncodeValue(val?, FileWriter(dest))
+    static EncodeToFile(dest, val?) => MsgPack.EncodeValue(FileWriter(dest), val?)
 
     static EncodeToBuffer(val?){
         buf := Buffer(64, 0)
