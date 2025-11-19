@@ -233,11 +233,37 @@ class MsgPack {
             ; TODO encode maps
         }
         else if (val is Array){
-            ; TODO encode arrays
+            MsgPack.EncodeArray(val, writer)
         }
         else{
             ; TODO extensions
             throw TypeError("Cannot encode value of type " . Type(val), , val)
+        }
+    }
+
+    /**
+     * Encodes an array
+     * @param {Array<Primitive|Map|Array>} arr The array to encode
+     * @param {BinaryWriter} writer Writer to write data to 
+     */
+    static EncodeArray(arr, writer){
+        if(arr.length <= 15){
+            writer.WriteByte(0x3E9 << 4 | arr.length)
+        }
+        else if(arr.length <= 65535){
+            writer.WriteByte(MsgPackType.array16)
+            BEWriter.WriteUint16(writer, arr.length)
+        }
+        else if(arr.length <= 4294967295){
+            writer.WriteByte(MsgPackType.array32)
+            BEWriter.WriteUInt32(writer, arr.length)
+        }
+        else{
+            throw ValueError("Array too long", , arr.length)
+        }
+
+        Loop(arr.Length){
+            MsgPack.EncodeValue(writer, arr[A_Index])
         }
     }
 

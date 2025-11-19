@@ -152,4 +152,31 @@ class PrimitiveEncodingTests {
         }
         EncodingTester.Test(buf, hex)
     }
+
+    ;------------------------------------------------------------
+    ; ARRAYS
+    ;------------------------------------------------------------
+    ArrayFixInt(*) {
+        arr := [0, 0, 0]
+        EncodingTester.Test(arr, "93 00 00 00")
+    }
+
+    ArrayFixStr(*) {
+        arr := ["A", "A", "A"]
+        EncodingTester.Test(arr, "93 A1 41 A1 41 A1 41")
+    }
+
+    ArrayEmpty(*) {
+        arr := []
+        EncodingTester.Test(arr, "90")
+    }
+
+    ArrayNested(*) {
+        arr := [
+            ["A", "A", "A"],
+            [0, 0, 0],
+            ["B", "B", "B"]
+        ]
+        EncodingTester.Test(arr, "93 93 A1 41 A1 41 A1 41 93 00 00 00 93 A1 42 A1 42 A1 42")
+    }
 }
