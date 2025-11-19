@@ -179,4 +179,51 @@ class PrimitiveEncodingTests {
         ]
         EncodingTester.Test(arr, "93 93 A1 41 A1 41 A1 41 93 00 00 00 93 A1 42 A1 42 A1 42")
     }
+
+    ;------------------------------------------------------------
+    ; MAPS
+    ;------------------------------------------------------------
+    MapFixIntSimple(*) {
+        test := Map(0, 1)
+        EncodingTester.Test(test, "81 00 01")
+    }
+
+    MapEmpty(*) {
+        test := Map()
+        EncodingTester.Test(test, "80")
+    }
+
+    MapFixStr(*) {
+        test := Map(1, "A", 2, "B", 3, "C")
+        EncodingTester.Test(test, "83 01 A1 41 02 A1 42 03 A1 43")
+    }
+
+    MapNested(*) {
+        test := Map(
+            Map(1, "A"), Map(2, "B")
+        )
+        EncodingTester.Test(test, "81 81 01 A1 41 81 02 A1 42")
+    }
+
+    ;------------------------------------------------------------
+    ; NESTED COLLECTIONS
+    ;------------------------------------------------------------
+    ArrayInMap(*) {
+        test := Map(
+            1, [1, 1, 1],
+            2, [2, 2, 2]
+        )
+
+        EncodingTester.Test(test, "82 01 93 01 01 01 02 93 02 02 02")
+    }
+
+    MapsInArray(*) {
+        test := [
+            Map(1, "A"),
+            Map(),
+            Map(3, "C")
+        ]
+
+        EncodingTester.Test(test, "93 81 01 A1 41 80 81 03 A1 43")
+    }
 }

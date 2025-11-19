@@ -230,7 +230,7 @@ class MsgPack {
             MsgPack.EncodeBoolean(val is MsgPack.BTrue ? 1 : 0, writer)
         }
         else if (val is Map){
-            ; TODO encode maps
+            MsgPack.EncodeMap(val, writer)
         }
         else if (val is Array){
             MsgPack.EncodeArray(val, writer)
@@ -264,6 +264,33 @@ class MsgPack {
 
         Loop(arr.Length){
             MsgPack.EncodeValue(writer, arr[A_Index])
+        }
+    }
+
+    /**
+     * Encodes a Map
+     * @param {Map<Primitive|Map|Array, Primitive|Map|Array>} val The map to encode
+     * @param {BinaryWriter} writer Writer to write data to  
+     */
+    static EncodeMap(val, writer){
+        if(val.count <= 15){
+            writer.WriteByte(0x3E8 << 4 | val.count)
+        }
+        else if(val.count <= 65535){
+            writer.WriteByte(MsgPackType.map16)
+            BEWriter.WriteUint16(writer, val.count)
+        }
+        else if(val.count <= 4294967295){
+            writer.WriteByte(MsgPackType.map32)
+            BEWriter.WriteUInt32(writer, val.count)
+        }
+        else{
+            throw ValueError("Map too large", , val.count)
+        }
+
+        for(key, value in val){
+            MsgPack.EncodeValue(writer, key)
+            MsgPack.EncodeValue(writer, value)
         }
     }
 
