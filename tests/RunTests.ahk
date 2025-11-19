@@ -2,12 +2,14 @@
 
 #Include tests\PrimitiveDecodingTests.ahk
 #Include tests\PrimitiveEncodingTests.ahk
+#Include tests\EndToEndTests.ahk
+
 #Include YUnit\Yunit.ahk
 #Include YUnit\JUnit.ahk
 #Include YUnit\Stdout.ahk
 #Include YUnit\ResultCounter.ahk
 
 tester := Yunit.Use(YunitStdOut, YUnitJUnit, YunitResultCounter)
-tester.Test(PrimitiveDecodingTests, PrimitiveEncodingTests)
+tester.Test(PrimitiveDecodingTests, PrimitiveEncodingTests, EndToEndTests)
 
 Exit(YunitResultCounter.failures > 0)

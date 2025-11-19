@@ -134,6 +134,10 @@ class PrimitiveEncodingTests {
         EncodingTester.Test(test, expected)
     }
 
+    StringNonEnglish1(*) => EncodingTester.Test("ひらがな", "ac e3 81 b2 e3 82 89 e3 81 8c e3 81 aa")
+    StringNonEnglish2(*) => EncodingTester.Test("Кириллица", "b2 d0 9a d0 b8 d1 80 d0 b8 d0 bb d0 bb d0 b8 d1 86 d0 b0")
+    StringEmoji(*) => EncodingTester.Test("🍺", "a4 f0 9f 8d ba")
+
     ;------------------------------------------------------------
     ; BINARY DATA
     ;------------------------------------------------------------
