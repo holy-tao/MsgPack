@@ -38,9 +38,11 @@ class PrimitiveEncodingTests {
     ;------------------------------------------------------------
     ; NIL + BOOLEAN
     ;------------------------------------------------------------
-    ;Nil(*) => EncodingTester.Test("", "C0")
-    ;False(*) => EncodingTester.Test("C2", 0)
-    ;True(*) => EncodingTester.Test("C3", 1)
+    NilUnset(*) => EncodingTester.Test(, "C0")   ; Unset value
+    NilObject(*) => EncodingTester.Test(MsgPack.Nil(), "C0")   ; Unset value
+
+    False(*) => EncodingTester.Test(MsgPack.BFalse(), "C2")
+    True(*) => EncodingTester.Test(MsgPack.BTrue(), "C3")
 
     ;------------------------------------------------------------
     ; POSITIVE FIXINT (0x00–0x7F)
@@ -128,7 +130,7 @@ class PrimitiveEncodingTests {
             if(A_Index < 250)
                 expected .= " "
         }
-        
+
         EncodingTester.Test(test, expected)
     }
 
@@ -150,6 +152,4 @@ class PrimitiveEncodingTests {
         }
         EncodingTester.Test(buf, hex)
     }
-
-    Nil(*) => EncodingTester.Test(, "C0")   ; Unset value
 }

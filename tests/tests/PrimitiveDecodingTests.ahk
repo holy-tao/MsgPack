@@ -55,9 +55,33 @@ class PrimitiveDecodingTests {
     ;------------------------------------------------------------
     ; NIL + BOOLEAN
     ;------------------------------------------------------------
-    Nil(*) => DecodingTester.Test("C0", "")
-    False(*) => DecodingTester.Test("C2", 0)
-    True(*) => DecodingTester.Test("C3", 1)
+    NilNative(*) {
+        MsgPack.NativeNils := true
+        DecodingTester.Test("C0", "")
+    }
+    NilClass(*) {
+        MsgPack.NativeNils := false
+        val := MsgPack.Decode(DecodingTester.BufferFrom("C0"))
+        Assert.IsType(val, MsgPack.NIl)
+    }
+    FalseNative(*) {
+        MsgPack.NativeBools := true
+        DecodingTester.Test("C2", 0)
+    }
+    TrueNative(*) {
+        MsgPack.NativeBools := true
+        DecodingTester.Test("C3", 1)
+    }
+    FalseClass(*) {
+        MsgPack.NativeBools := false
+        val := MsgPack.Decode(DecodingTester.BufferFrom("C2"))
+        Assert.IsType(val, MsgPack.BFalse)
+    }
+    TrueClass(*) {
+        MsgPack.NativeBools := false
+        val := MsgPack.Decode(DecodingTester.BufferFrom("C3"))
+        Assert.IsType(val, MsgPack.BTrue)
+    }
 
     ;------------------------------------------------------------
     ; POSITIVE FIXINT (0x00–0x7F)

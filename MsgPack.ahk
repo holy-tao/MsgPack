@@ -20,6 +20,17 @@ class MsgPack {
      * @type {Boolean}
      */
     static CompactFloats := false
+
+    /**
+     * If true, the boolean values will be decoded as 1 / 0 instead of MsgPack.BTrue or
+     * MsgPack.BFalse
+     */
+    static NativeBools := true
+
+    /**
+     * If true, nil values will be decoded as empty strings instead of MsgPack.Nil
+     */
+    static NativeNils := true
 ;@endregion Options
 
 ;@region Decoding
@@ -92,11 +103,11 @@ class MsgPack {
                 len := BEReader.ReadUInt32(reader)
                 val := MsgPack.DecodeMap(reader, len)
             case MsgPackType.nil:
-                val := ""
+                val := MsgPack.NativeNils ? "" : MsgPack.Nil()
             case MsgPackType.bFalse:
-                val := 0
+                val := MsgPack.NativeBools ? 0 : MsgPack.BFalse()
             case MsgPackType.bTrue:
-                val := 1
+                val := MsgPack.NativeBools ? 1 : MsgPack.BTrue()
             case MsgPackType.bin8:
                 len := reader.ReadByte()
                 val := reader.ReadBytes(len)
@@ -200,7 +211,7 @@ class MsgPack {
     }
 
     static EncodeValue(writer, val?){
-        if(!IsSet(val)){
+        if(!IsSet(val) || val is MsgPack.Nil){
             MsgPack.EncodeNil(writer)
         }
         else if (val is String){
@@ -214,6 +225,9 @@ class MsgPack {
         }
         else if (IsInteger(val)){
             MsgPack.EncodeInteger(val, writer)
+        }
+        else if (val is MsgPack.BTrue || val is MsgPack.BFalse){
+            MsgPack.EncodeBoolean(val is MsgPack.BTrue ? 1 : 0, writer)
         }
         else if (val is Map){
             ; TODO encode maps
@@ -384,5 +398,23 @@ class MsgPack {
 
 
 ;@endregion Encoding
+
+;@region Utils
+
+    class BFalse {
+        ToString() => "false"
+        Value => 0
+    }
+
+    class BTrue {
+        ToString() => "true"
+        Value => 1
+    }
+
+    class Nil {
+        ToString() => "nil"
+    }
+
+;@endregion
 
 }
