@@ -11,6 +11,6 @@
 #Include YUnit\ResultCounter.ahk
 
 tester := Yunit.Use(YunitStdOut, YUnitJUnit, YunitResultCounter)
-tester.Test(PrimitiveDecodingTests, PrimitiveEncodingTests, EndToEndTests, TimestampEncodingDecodingTests)
+tester.Test(PrimitiveDecodingTests, PrimitiveEncodingTests, EndToEndTests, TimestampEncodingDecodingTests, TimestampFunctionalTests)
 
 Exit(YunitResultCounter.failures > 0)

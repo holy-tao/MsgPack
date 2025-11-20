@@ -101,3 +101,10 @@ class TimestampEncodingDecodingTests {
         }
     }
 }
+
+class TimestampFunctionalTests {
+
+    Now_Always_GetsNow(){
+        Assert.Equals(MsgPackTimestamp.Now().ToAhkTimestamp(), A_NowUTC)
+    }
+}
