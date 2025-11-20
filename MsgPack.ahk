@@ -191,11 +191,8 @@ class MsgPack {
         if(!MsgPack.ExtensionTypes.Has(prefix)){
             throw TypeError("No extension type registered for type prefix", , prefix)
         }
-
-        cls := MsgPack.ExtensionTypes[prefix]
-        obj := cls.Call()
-        obj.MsgPackDecode(reader, length)
-        return obj
+        
+        return MsgPack.ExtensionTypes[prefix].MsgPackDecode(reader, length)
     }
 
     /**

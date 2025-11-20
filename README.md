@@ -34,31 +34,18 @@ By default, all floats (as determined by [`IsFloat`](https://www.autohotkey.com/
 ### Extension Types
 [Ext format family](https://github.com/msgpack/msgpack/blob/master/spec.md#ext-format-family) stores a tuple of an integer and a byte array. These values are identified with a length prefix and a type integer. Negative values are reserved for spec-specified types.
 
-You can make an object encodable and decodable by implementing the following methods:
+You can make an object encodable and decodable by implementing an instance `MsgPackEncode` and a static `MsgPackDecode` method:
 ```autohotkey
 class EncodableObject {
+    MsgPackEncode(writer) => Any
 
-    MsgPackEncode(writer) {
-
-    }
-
-    MsgPackDecode(writer, length) {
-
-    }
+    static MsgPackDecode(writer, length) => EncodableObject
 }
 ```
 
-Before decoding data with extension types, register type's [class](https://www.autohotkey.com/docs/v2/lib/Class.htm) with MsgPack:
+Before decoding data with extension types, register type's [class](https://www.autohotkey.com/docs/v2/lib/Class.htm) with MsgPack. This is not required to merely encode data:
 ```autohotkey
 MsgPack.ExtensionTypes[1] := EncodableClass
-```
-
-The type must also implement a zero-argument [`Call`](https://www.autohotkey.com/docs/v2/lib/Class.htm#Call) and [`__New`](https://www.autohotkey.com/docs/v2/Objects.htm#Custom_NewDelete) methods. When decoding extension types, `MsgPack` will first instantiate the registered class with no arguments, then call `MsgPackDecode`:
-```authotkey
-cls := MsgPack.ExtensionTypes[prefix]
-obj := cls.Call()
-obj.MsgPackDecode(reader, length)
-return obj
 ```
 
 Encoder and decoder methods take `BinaryWriter` and `BinaryReader` objects with which they an read binary data. The underlying data source is unknown to the object. Encode is responsible for writing both the prefix, type, and data array, while decode begins with the prefix and type already consumed.

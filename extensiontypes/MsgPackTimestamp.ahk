@@ -20,6 +20,16 @@ class MsgPackTimestamp {
     static UNIX_EPOCH_AHK => "19700101"
     
     /**
+     * Initializes a new MsgPackTimestamp object
+     * @param {Integer} seconds Seconds since Jan 1 1970
+     * @param {Integer} nanoseconds Milliseconds since Jan 1 1970 (default: 0)
+     */
+    __New(seconds := 0, nanoseconds := 0){
+        this.seconds := seconds
+        this.nanoseconds := nanoseconds
+    }
+
+    /**
      * Creates and returns a MsgPackTimestamp for the current time. Nanoseconds are populated, but
      * are only accurate to 100-nanosecond intervals.
      */
@@ -90,21 +100,23 @@ class MsgPackTimestamp {
      * @param {BinaryReader} reader the reader to read data from
      * @param {Integer} length the number of bytes in the serialized data block
      */
-    MsgPackDecode(reader, length) {
+    static MsgPackDecode(reader, length) {
         switch length{
             case 4:
-                this.nanoseconds := 0
-                this.seconds := BEReader.ReadUInt32(reader)
+                nanoseconds := 0
+                seconds := BEReader.ReadUInt32(reader)
             case 8:
                 data64 := BEReader.ReadUInt64(reader)
                 ; Literal bit shift, NOT logical - we'll almost always run into AHK-has-no-uint64 problems otherwise
-                this.nanoseconds := data64 >>> 34 
-                this.seconds := data64 & 0x00000003ffffffff
+                nanoseconds := data64 >>> 34 
+                seconds := data64 & 0x00000003ffffffff
             case 12:
-                this.nanoseconds := BEReader.ReadUInt32(reader)
-                this.seconds := BEReader.ReadInt64(reader)
+                nanoseconds := BEReader.ReadUInt32(reader)
+                seconds := BEReader.ReadInt64(reader)
             default:
                 throw ValueError("Invalid length for MessagePack Timestamp", , length)
         }
+
+        return MsgPackTimestamp(seconds, nanoseconds)
     }
 }
