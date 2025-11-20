@@ -277,8 +277,12 @@ class MsgPack {
             MsgPack.EncodeArray(val, writer)
         }
         else{
-            ; TODO extensions
-            throw TypeError("Cannot encode value of type " . Type(val), , val)
+            if(HasMethod(val, "MsgPackEncode", 1)){
+                val.MsgPackEncode(writer)
+            }
+            else{
+                throw TypeError("Cannot encode value of type " . Type(val), , val)
+            }
         }
     }
 
