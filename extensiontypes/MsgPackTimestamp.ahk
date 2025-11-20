@@ -60,7 +60,7 @@ class MsgPackTimestamp {
      * @param {BinaryWriter} writer writer to write data to
      */
     MsgPackEncode(writer) {
-        if(this.seconds >> 34 == 0){
+        if(this.seconds >>> 34 == 0){
             data64 := (this.nanoseconds << 34) | this.seconds
             if (data64 & 0xffffffff00000000 == 0) {
                 ; timestamp 32
@@ -79,6 +79,7 @@ class MsgPackTimestamp {
             ; timestamp 96
             writer.WriteByte(MsgPackType.ext8)
             BEWriter.WriteUInt8(writer, 12)
+            BEWriter.WriteInt8(writer, -1)
             BEWriter.WriteUInt32(writer, this.nanoseconds)
             BEWriter.WriteInt64(writer, this.seconds)
         }
