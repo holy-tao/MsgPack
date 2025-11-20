@@ -105,82 +105,80 @@ class MsgPack {
         switch(lvByte){
             case MsgPackType.array16:
                 len := BEReader.ReadUInt16(reader)
-                val := MsgPack.DecodeArray(reader, len)
+                return MsgPack.DecodeArray(reader, len)
             case MsgPackType.array32:
                 len := BEReader.ReadInt32(reader)
-                val := MsgPack.DecodeArray(reader, len)
+                return MsgPack.DecodeArray(reader, len)
             case MsgPackType.map16:
                 len := BEReader.ReadUInt16(reader)
-                val := MsgPack.DecodeMap(reader, len)
+                return MsgPack.DecodeMap(reader, len)
             case MsgPackType.map32:
                 len := BEReader.ReadUInt32(reader)
-                val := MsgPack.DecodeMap(reader, len)
+                return MsgPack.DecodeMap(reader, len)
             case MsgPackType.nil:
-                val := MsgPack.NativeNils ? "" : MsgPack.Nil()
+                return MsgPack.NativeNils ? "" : MsgPack.Nil()
             case MsgPackType.bFalse:
-                val := MsgPack.NativeBools ? 0 : MsgPack.BFalse()
+                return MsgPack.NativeBools ? 0 : MsgPack.BFalse()
             case MsgPackType.bTrue:
-                val := MsgPack.NativeBools ? 1 : MsgPack.BTrue()
+                return MsgPack.NativeBools ? 1 : MsgPack.BTrue()
             case MsgPackType.bin8:
                 len := reader.ReadByte()
-                val := reader.ReadBytes(len)
+                return reader.ReadBytes(len)
             case MsgPackType.bin16:
                 len := BEReader.ReadUInt16(reader)
-                val := reader.ReadBytes(len)
+                return reader.ReadBytes(len)
             case MsgPackType.bin32:
                 len := BEReader.ReadUInt32(reader)
-                val := reader.ReadBytes(len)
+                return reader.ReadBytes(len)
             case MsgPackType.int8:
-                val := reader.ReadByte(true)
+                return reader.ReadByte(true)
             case MsgPackType.int16:
-                val := BEReader.ReadInt16(reader)
+                return BEReader.ReadInt16(reader)
             case MsgPackType.int32:
-                val := BEReader.ReadInt32(reader)
+                return BEReader.ReadInt32(reader)
             case MsgPackType.int64:
-                val := BEReader.ReadInt64(reader)
+                return BEReader.ReadInt64(reader)
             case MsgPackType.uint8:
-                val := reader.ReadByte()
+                return reader.ReadByte()
             case MsgPackType.uint16:
-                val := BEReader.ReadUInt16(reader)
+                return BEReader.ReadUInt16(reader)
             case MsgPackType.uint32:
-                val := BEReader.ReadUInt32(reader)
+                return BEReader.ReadUInt32(reader)
             case MsgPackType.uint64:
-                val := BEReader.ReadUInt64(reader)
+                return BEReader.ReadUInt64(reader)
             case MsgPackType.float32:
-                val := BEReader.ReadFloat32(reader)
+                return BEReader.ReadFloat32(reader)
             case MsgPackType.float64:
-                val := BEReader.ReadFloat64(reader)
+                return BEReader.ReadFloat64(reader)
             case MsgPackType.str8:
                 len := reader.ReadByte()
-                val := reader.ReadString(len, "UTF-8")
+                return reader.ReadString(len, "UTF-8")
             case MsgPackType.str16:
                 len := BEReader.ReadUInt16(reader)
-                val := reader.ReadString(len, "UTF-8")
+                return reader.ReadString(len, "UTF-8")
             case MsgPackType.str32:
                 len := BEReader.ReadUInt32(reader)
-                val := reader.ReadString(len, "UTF-8")
+                return reader.ReadString(len, "UTF-8")
             case MsgPackType.fixext1:
-                val := MsgPack.DecodeExt(reader, 1)
+                return MsgPack.DecodeExt(reader, 1)
             case MsgPackType.fixext2:
-                val := MsgPack.DecodeExt(reader, 2)
+                return MsgPack.DecodeExt(reader, 2)
             case MsgPackType.fixext4:
-                val := MsgPack.DecodeExt(reader, 4)
+                return MsgPack.DecodeExt(reader, 4)
             case MsgPackType.fixext8:
-                val := MsgPack.DecodeExt(reader, 8)
+                return MsgPack.DecodeExt(reader, 8)
             case MsgPackType.ext8:
                 length := BEReader.ReadUInt8(reader)
-                val := MsgPack.DecodeExt(reader, length)
+                return MsgPack.DecodeExt(reader, length)
             case MsgPackType.ext16:
                 length := BEReader.ReadUInt16(reader)
-                val := MsgPack.DecodeExt(reader, length)
+                return MsgPack.DecodeExt(reader, length)
             case MsgPackType.ext32:
                 length := BEReader.ReadUInt32(reader)
-                val := MsgPack.DecodeExt(reader, length)
+                return MsgPack.DecodeExt(reader, length)
             default:
                 throw TypeError(Format("Could not decode leading byte 0x{1:0X} at offset {2}", lvByte, reader.offset - 1))
         }
-
-        return val
     }
 
     /**
