@@ -17,8 +17,8 @@ class MsgPackTimestamp {
      * The timestamp 1970-01-01 00:00:00 in {@link https://www.autohotkey.com/docs/v2/lib/FileSetTime.htm#YYYYMMDD|YYYYMMDDHH24MISS format}
      * @type {String}
      */
-    static UNIX_EPOCH_AHK => "1970010100000000"
-
+    static UNIX_EPOCH_AHK => "19700101"
+    
     /**
      * Creates and returns a MsgPackTimestamp for the current time. Nanoseconds are populated, but
      * are only accurate to 100-nanosecond intervals.
@@ -27,10 +27,10 @@ class MsgPackTimestamp {
         static UNIX_EPOCH_AS_FILETIME := 116444736000000000
 
         ; 100-nanosecond intervals since January 1, 1601 UTC
-        DllCall("kernel32/GetSystemTimeAsFileTime", "uint64*", &ftCurrentTime := 0)
+        DllCall("GetSystemTimeAsFileTime", "uint64*", &ftCurrentTime := 0)
         nanoseconds := (ftCurrentTime - UNIX_EPOCH_AS_FILETIME) * 100
 
-        MsgPackTimestamp.FromAhkTimestamp(A_NowUTC, nanoseconds)
+        return MsgPackTimestamp.FromAhkTimestamp(A_NowUTC, nanoseconds)
     }
 
     /**
@@ -41,7 +41,7 @@ class MsgPackTimestamp {
      */
     static FromAhkTimestamp(timestamp, nanoseconds := 0){
         out := MsgPackTimestamp()
-        out.seconds := DateDiff(timestamp,MsgPackTimestamp.UNIX_EPOCH_AHK, "Seconds")
+        out.seconds := DateDiff(timestamp, MsgPackTimestamp.UNIX_EPOCH_AHK, "Seconds")
         out.nanoseconds := nanoseconds
 
         return out
