@@ -9,6 +9,8 @@
 #Include utils\BufferWriter.ahk
 #Include utils\FileWriter.ahk
 
+#Include extensiontypes\MsgPackTimestamp.ahk
+
 class MsgPack {
 
 ;@region Options
@@ -31,6 +33,17 @@ class MsgPack {
      * If true, nil values will be decoded as empty strings instead of MsgPack.Nil
      */
     static NativeNils := true
+
+    /**
+     * Map of extension identifiers to the types of the extensions. Class instances must
+     * implement the following methods:
+     * 
+     *      Encode(writer) => Any
+     *      Decode(reader, length) => Any
+     * 
+     * Additionally, the `__New` and `Call` methods must be callable with no parameters.
+     */
+    static ExtensionTypes := Map(-1, MsgPackTimestamp)
 ;@endregion Options
 
 ;@region Decoding
@@ -146,17 +159,45 @@ class MsgPack {
             case MsgPackType.str32:
                 len := BEReader.ReadUInt32(reader)
                 val := reader.ReadString(len, "UTF-8")
+            case MsgPackType.fixext1:
+                val := MsgPack.DecodeExt(reader, 1)
+            case MsgPackType.fixext2:
+                val := MsgPack.DecodeExt(reader, 2)
+            case MsgPackType.fixext4:
+                val := MsgPack.DecodeExt(reader, 4)
+            case MsgPackType.fixext8:
+                val := MsgPack.DecodeExt(reader, 8)
             case MsgPackType.ext8:
-                ;TODO
+                length := BEReader.ReadUInt8(reader)
+                val := MsgPack.DecodeExt(reader, length)
             case MsgPackType.ext16:
-                ;TODO
+                length := BEReader.ReadUInt16(reader)
+                val := MsgPack.DecodeExt(reader, length)
             case MsgPackType.ext32:
-                ;TODO
+                length := BEReader.ReadUInt32(reader)
+                val := MsgPack.DecodeExt(reader, length)
             default:
                 throw TypeError(Format("Could not decode leading byte 0x{1:0X} at offset {2}", lvByte, reader.offset - 1))
         }
 
         return val
+    }
+
+    /**
+     * Decodes an extension type
+     * @param {BinaryReader} reader reader to read values from 
+     * @param {Integer} length the length of the data array 
+     */
+    static DecodeExt(reader, length){
+        prefix := BEReader.ReadInt8(reader)
+        if(!MsgPack.ExtensionTypes.Has(prefix)){
+            throw TypeError("No extension type registered for type prefix", , prefix)
+        }
+
+        cls := MsgPack.ExtensionTypes[prefix]
+        obj := cls.Call()
+        obj.MsgPackDecode(reader, length)
+        return obj
     }
 
     /**
