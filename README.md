@@ -1,6 +1,5 @@
-[![Unit Tests](https://github.com/holy-tao/MsgPack/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/holy-tao/MsgPack/actions/workflows/unit-tests.yml)
-
 # MsgPack
+[![Unit Tests](https://github.com/holy-tao/MsgPack/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/holy-tao/MsgPack/actions/workflows/unit-tests.yml)
 
 A [MessagePack](https://msgpack.io/) implementation in pure AutoHotkey v2. 
 
@@ -32,5 +31,43 @@ All AutoHotkey numbers are 64-bit. However, the MessagePack specification makes 
 
 By default, all floats (as determined by [`IsFloat`](https://www.autohotkey.com/docs/v2/lib/Is.htm#float)) are encoded as 64-bit Doubles. However, if the `MsgPack.CompactFloats` value is truthy, the encoder will use a lossy heuristic to guess whether or not a float can be safelty encoded in 32 bits. This may result in lost precision and should only be used where that precision doesn't matter and where you are encoding *a lot* of floats. In most cases, you can spare the 4 bytes.
 
-#### Extension Types
-TODO
+### Extension Types
+[Ext format family](https://github.com/msgpack/msgpack/blob/master/spec.md#ext-format-family) stores a tuple of an integer and a byte array. These values are identified with a length prefix and a type integer. Negative values are reserved for spec-specified types.
+
+You can make an object encodable and decodable by implementing the following methods:
+```autohotkey
+class EncodableObject {
+
+    MsgPackEncode(writer) {
+
+    }
+
+    MsgPackDecode(writer, length) {
+
+    }
+}
+```
+
+Before decoding data with extension types, register type's [class](https://www.autohotkey.com/docs/v2/lib/Class.htm) with MsgPack:
+```autohotkey
+MsgPack.ExtensionTypes[1] := EncodableClass
+```
+
+The type must also implement a zero-argument [`Call`](https://www.autohotkey.com/docs/v2/lib/Class.htm#Call) and [`__New`](https://www.autohotkey.com/docs/v2/Objects.htm#Custom_NewDelete) methods. When decoding extension types, `MsgPack` will first instantiate the registered class with no arguments, then call `MsgPackDecode`:
+```authotkey
+cls := MsgPack.ExtensionTypes[prefix]
+obj := cls.Call()
+obj.MsgPackDecode(reader, length)
+return obj
+```
+
+Encoder and decoder methods take `BinaryWriter` and `BinaryReader` objects with which they an read binary data. The underlying data source is unknown to the object. Encode is responsible for writing both the prefix, type, and data array, while decode begins with the prefix and type already consumed.
+
+> [!IMPORTANT]
+> **The ext prefix and type must be encoded in Big-Endian format.** This is convention for MessagePack in general. You can use the `BEWriter` class to write numbers in big-endian format like so:
+> ```autohotkey
+> BEWriter.WriteInt32(writer, 123465) ; or WriteInt16, WriteDouble, etc
+> ```
+> The format of the data array has no requirements, and its endianness is not defined.
+
+See the `MsgPackTimestamp` type for an example.
