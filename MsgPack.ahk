@@ -238,8 +238,19 @@ class MsgPack {
 ;@endregion Decoding
 
 ;@region Encoding
+    /**
+     * Encodes and writes data to a file
+     * @param {File} dest The file to write data to. Must have been opened with write
+     *          permissions 
+     * @param val value to encode
+     */
     static EncodeToFile(dest, val?) => MsgPack.EncodeValue(FileWriter(dest), val?)
 
+    /**
+     * Encodes data to a Buffer
+     * @param {Any} val value to encode 
+     * @returns {Buffer} returns a Buffer containing the encoded data
+     */
     static EncodeToBuffer(val?){
         buf := Buffer(64, 0)
         writer := BufferWriter(buf)
@@ -249,6 +260,11 @@ class MsgPack {
         return buf
     }
 
+    /**
+     * Encodes a single value using an arbitrary writer
+     * @param {BinaryWriter} writer writer to encode the value with 
+     * @param {Any} val value to encode 
+     */
     static EncodeValue(writer, val?){
         if(!IsSet(val) || val is MsgPack.Nil){
             MsgPack.EncodeNil(writer)
