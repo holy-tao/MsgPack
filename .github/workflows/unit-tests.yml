@@ -35,3 +35,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           detailed_summary: true
           include_time_in_summary: true
+          include_passed: true
