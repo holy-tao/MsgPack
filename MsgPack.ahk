@@ -237,11 +237,23 @@ class MsgPack {
 ;@region Encoding
     /**
      * Encodes and writes data to a file
-     * @param {File} dest The file to write data to. Must have been opened with write
-     *          permissions 
+     * @param {String | File} dest The file to write data to. If a string, it is interpreted
+     *          as a filepath and the file is created, overwriting any existing files
      * @param val value to encode
      */
-    static EncodeToFile(dest, val?) => MsgPack.EncodeValue(FileWriter(dest), val?)
+    static EncodeToFile(dest, val?){
+        if(dest is String){
+            destFile := FileOpen(dest, "w")
+            MsgPack.EncodeValue(FileWriter(destFile), val?)
+            destFile.Close()
+        }
+        else if(dest is File){
+            MsgPack.EncodeValue(FileWriter(dest), val?)
+        }
+        else {
+            throw TypeError("Expected a filepath or File, but got a(n) " . Type(dest),, dest)
+        }
+    }
 
     /**
      * Encodes data to a Buffer
