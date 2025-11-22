@@ -33,3 +33,5 @@ jobs:
         with:
           report_paths: tests/junit.xml
           token: ${{ secrets.GITHUB_TOKEN }}
+          detailed_summary: true
+          include_time_in_summary: true
