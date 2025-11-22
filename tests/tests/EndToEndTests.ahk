@@ -25,6 +25,29 @@ class EndToEndTests {
         Assert.ArraysEqual(testValue, decoded)
     }
 
+    SimpleFilePathEncodeDecode(*) {
+        path := Format("{1}\{2}.messagepack", A_ScriptDir, A_ThisFunc)
+
+        testValue := [
+            1, 2, 3, 4, 5,
+            Map("A String!", ["An", "Array", "Of", "Strings"]),
+            0.5, 0.75, 1.0
+        ]
+
+        MsgPack.EncodeToFile(path, testValue)
+        
+        if(!FileExist(path)){
+            throw Error("File was not created!", , path)
+        }
+
+        decoded := MsgPack.Decode(path)
+        Assert.ArraysEqual(testValue, decoded)
+    }
+
+    SimpleFileInvalidArg(*){
+        Assert.Throws((*) => MsgPack.EncodeToFile({}), TypeError)
+    }
+
     SimpleBufferEncodeDecode(*){
         testValue := Map(
             1, ["One", "Unus", "Another word for one, I guess?"],
