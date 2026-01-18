@@ -28,8 +28,10 @@ class BufferReader extends BinaryReader {
     }
 
     ReadBytes(length){
+        static methodName := A_PtrSize == 8 ? "ntdll\RtlCopyMemory" : "ntdll\RtlMoveMemory"
+
         target := Buffer(length)
-        DllCall("ntdll\RtlCopyMemory", "ptr", target, "ptr", this._buf.ptr + this.offset, "uint", length)
+        DllCall(methodName, "ptr", target, "ptr", this._buf.ptr + this.offset, "uint", length)
         this.offset += length
 
         return target
