@@ -1,10 +1,10 @@
 #Requires AutoHotkey v2.0
 
-#Include tests\PrimitiveDecodingTests.ahk
-#Include tests\PrimitiveEncodingTests.ahk
-#Include tests\EndToEndTests.ahk
-#Include tests\TimestampTests.ahk
-#Include tests\TypedObjectTest.ahk
+#Include tests\PrimitiveDecoding.test.ahk
+#Include tests\PrimitiveEncoding.test.ahk
+#Include tests\EndToEnd.test.ahk
+#Include tests\Timestamp.test.ahk
+#Include tests\TypedObject.test.ahk
 
 #Include YUnit\Yunit.ahk
 #Include YUnit\JUnit.ahk
