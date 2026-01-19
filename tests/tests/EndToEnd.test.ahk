@@ -4,7 +4,7 @@
 
 class EndToEndTests {
 
-    SimpleFileEncodeDecode(*) {
+    SimpleFileEncodeDecode() {
         path := Format("{1}\{2}.messagepack", A_ScriptDir, A_ThisFunc)
         testFile := FileOpen(path, "w")
 
@@ -25,7 +25,7 @@ class EndToEndTests {
         Assert.ArraysEqual(testValue, decoded)
     }
 
-    SimpleFilePathEncodeDecode(*) {
+    SimpleFilePathEncodeDecode() {
         path := Format("{1}\{2}.messagepack", A_ScriptDir, A_ThisFunc)
 
         testValue := [
@@ -44,11 +44,11 @@ class EndToEndTests {
         Assert.ArraysEqual(testValue, decoded)
     }
 
-    SimpleFileInvalidArg(*){
+    SimpleFileInvalidArg(){
         Assert.Throws((*) => MsgPack.EncodeToFile({}), TypeError)
     }
 
-    SimpleBufferEncodeDecode(*){
+    SimpleBufferEncodeDecode(){
         testValue := Map(
             1, ["One", "Unus", "Another word for one, I guess?"],
             "map", Map(
@@ -65,7 +65,7 @@ class EndToEndTests {
         Assert.MapsEqual(testValue, decoded)
     }
 
-    VeryLongArrayWithLargeNumbers(*){
+    VeryLongArrayWithLargeNumbers(){
         path := Format("{1}\{2}.messagepack", A_ScriptDir, A_ThisFunc)
         testFile := FileOpen(path, "w")
 

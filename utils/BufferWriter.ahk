@@ -36,8 +36,9 @@ class BufferWriter extends BinaryWriter {
         while(this.buf.Size < byteBuffer.Size + this.offset){
             this.buf.Size *= 2
         }
+        static methodName := A_PtrSize == 8 ? "ntdll\RtlCopyMemory" : "ntdll\RtlMoveMemory"
 
-        DllCall("ntdll\RtlCopyMemory", "ptr", this.buf.ptr + this.offset, "ptr", byteBuffer, "uint", byteBuffer.Size)
+        DllCall(methodName, "ptr", this.buf.ptr + this.offset, "ptr", byteBuffer, "uint", byteBuffer.Size)
         this.offset += byteBuffer.Size
     }
 }
