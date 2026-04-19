@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         exe: ['AutoHotkey64.exe', 'AutoHotkey32.exe']
-        version: ['latest']
+        version: ['latest', '2.1-latest']
 
     steps:
       - name: Checkout Repository
